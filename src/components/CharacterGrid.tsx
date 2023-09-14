@@ -1,19 +1,16 @@
-import { useGetCharacterCollection } from './customHooks/useCharacter'
+import { useCharacterDetail } from './customHooks/useCharacter'
+import { CharacterType } from '../types/character'
 
-const CharacterGrid = () => {
-  const { collection, isLoading, isError } = useGetCharacterCollection()
+interface Props {
+  characters: CharacterType[]
+}
 
-  if (isLoading) {
-    return <div>Loading...</div>
-  }
-
-  if (isError) {
-    return <div>Algo salió mal</div>
-  }
+const CharacterGrid = ({ characters }: Props) => {
+  const { setCharacterDetail } = useCharacterDetail()
 
   return (
     <div>
-      {collection.map((character) => {
+      {characters.map((character) => {
         return (
           <div key={character.id}>
             <h2>{character.name}</h2>
@@ -21,8 +18,11 @@ const CharacterGrid = () => {
               {character.status} — {character.species}
             </h3>
             <img src={character.image} alt={`Photo of ${character.name}`} />
-            <h3>Last known location: {character.lastKnownLocation}</h3>
             <h3>First seen in: {character.firstSeenIn}</h3>
+            <h3>Last known location: {character.lastKnownLocation}</h3>
+            <button onClick={() => setCharacterDetail(character)}>
+              View More
+            </button>
           </div>
         )
       })}

@@ -1,18 +1,30 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { setPaging } from './pagingSlice'
 import axios from 'axios'
 
 import type { RootState } from '../store'
 import type { CharacterType, RawCharacter } from '../../types/character'
 import type { Episode } from '../../types/episode'
 
-const { VITE_BASE_API_URL } = import.meta.env
+export interface InfoResponse {
+  count: number
+  pages: number
+  next: string | null
+  prev: string | null
+}
+
+interface DataResponse {
+  info: InfoResponse
+  results: RawCharacter[]
+}
 
 export const fetchCharacterCollection = createAsyncThunk(
   'character/fetchCharacterCollection',
-  async () => {
-    const { data }: { data: { results: RawCharacter[] } } = await axios.get(
-      `${VITE_BASE_API_URL}/character`
-    )
+  async (url: string | null, thunkAPI) => {
+    const endpoint = url ?? `${import.meta.env.VITE_API_BASE_URL}/character`
+    const { data }: { data: DataResponse } = await axios.get(endpoint)
+
+    thunkAPI.dispatch(setPaging(data.info))
 
     const transformedCharacterList: CharacterType[] = await Promise.all(
       data.results.map(async (character: RawCharacter) => {
@@ -59,7 +71,11 @@ const initialState: CharacterState = {
 const characterSlice = createSlice({
   name: 'character',
   initialState,
-  reducers: {},
+  reducers: {
+    setDetail: (state, action) => {
+      state.detail = action.payload
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchCharacterCollection.pending, (state) => {
@@ -89,4 +105,5 @@ export const selectDetailStatus = (state: RootState) =>
 export const selectDetailError = (state: RootState) =>
   state.character.detailError
 
+export const { setDetail } = characterSlice.actions
 export default characterSlice.reducer
